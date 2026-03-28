@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <filesystem>
+#include "constants.h" 
 
 struct Vector {
   size_t size;
@@ -279,9 +280,6 @@ void graphviz_dump(Matrix& adj, Vector& state, std::string file_path) {
 };
 
 int main(int argc, char* argv[]) {
-  size_t o = 4;     // order of the graph
-  size_t d = o - 1; // d-regular value
-
   Matrix A; // adjacency matrix
   Vector S; // state vector
   Vector D; // division vector
@@ -331,16 +329,16 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   
-  rule_init(R, d, RULE_NUMBER);
+  rule_init(R, Config::d, RULE_NUMBER);
   
   std::filesystem::create_directories(std::format("./rule-{:05}", RULE_NUMBER)); 
   graphviz_dump(A, S, std::format("rule-{:05}/{:04}.dot", RULE_NUMBER, 0));
   
   for (size_t t = 1; t <= ITERATIONS; ++t) {
-    C = S.mult(d+1) + A.mult(S);
+    C = S.mult(Config::d+1) + A.mult(S);
     update_state(S, C, R); 
     update_division(D, C, R);
-    handle_division(A, S, D, d);
+    handle_division(A, S, D, Config::d);
     graphviz_dump(A, S, std::format("rule-{:05}/{:04}.dot", RULE_NUMBER, t));
   }
 
