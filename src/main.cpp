@@ -1,9 +1,11 @@
 #include <iostream>
+#include <print>
 #include <vector>
 #include <format>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
+#include <cmath>
 #include "constants.h" 
 
 struct Vector {
@@ -279,13 +281,67 @@ void graphviz_dump(Matrix& adj, Vector& state, std::string file_path) {
   std::cout << std::format("graphviz dot file saved to {}\n", file_path);
 };
 
+static void printUsage(std::string_view progName) {
+  std::print(
+    "Usage: {} [options]\n\n"
+    "Options:\n"
+    "  -r, --rule <N>       Rule number [ 0, 16^(d+1) )                      (Required)\n"
+    "  -i, --iterations <N> Number of iterations to evolve the graph         (Required)\n"
+    "  -d, --degree <N>     Degree of the regular graph (d-regular)          (Required if no initial graph)\n"
+    "  -g, --initial <file> Path to the initial graph file                   (Optional)\n"
+    "  -o, --output <dir>   Output directory for generated .dot files        (default: .)\n"
+    "  -h, --help           Show this help message\n\n"
+    "Example:\n"
+    "  {} -r 2236 -i 30 -d 3 -o data\n\n",
+    progName, progName);
+}
+
 int main(int argc, char* argv[]) {
+
   Matrix A; // adjacency matrix
   Vector S; // state vector
   Vector D; // division vector
   Vector C; // configuration vector
   Rule   R; // d-regular rule
- 
+
+  int ruleNumber = -1;
+  int iterations = 0;
+  int d = Config::d;
+  std::string outputDir(Config::OUTPUT_DIR);
+  std::string initialGraphPath = "";
+
+  for (int i = 1; i < argc; ++i) {
+    std::string_view arg(argv[i]);
+    if (arg == "--help") {
+      printUsage(argv[0]);
+      return 0;
+    } else if ((arg == "--rule" || arg == "-r") && i+1 < argc) {
+        ruleNumber = std::stoi(argv[++i]);
+    } else if ((arg == "--iterations" || arg == "-i") && i+1 < argc) {
+        iterations = std::stoi(argv[++i]);
+    } else if ((arg == "--degree" || arg == "-d") && i+1 < argc) {
+        d = std::stoi(argv[++i]);
+    } else if ((arg == "--initial" || arg == "-g") && i+1 < argc) {
+        initialGraphPath = argv[++i];
+    } else if ((arg == "--output" || arg == "-o") && i+1 < argc) {
+        outputDir = argv[++i];
+    } else {
+      std::println("Unknown argument: {}", arg);
+      std::print("\n");
+      printUsage(argv[0]);
+      return 1;
+    }
+  }
+  
+  if (ruleNumber >= std::pow(16, d+1)) {
+    std::println("Rule number must be between [0, {})\n", std::pow(16, d+1));
+    return -1;
+  }
+  
+  std::filesystem::create_directories(outputDir); 
+  
+  rule_init(R, d, ruleNumber);
+
   std::vector<std::vector<float>> init_matrix = {
       {0, 1, 0, 0, 0, 0, 0, 0, 1, 1},
       {1, 0, 1, 1, 0, 0, 0, 0, 0, 0},
@@ -313,33 +369,16 @@ int main(int argc, char* argv[]) {
       1,
       1
   });
+  
+  std::filesystem::create_directories(std::format("{}/rule-{:08}", outputDir, ruleNumber)); 
+  graphviz_dump(A, S, std::format("{}/rule-{:08}/{:04}.dot", outputDir, ruleNumber, 0));
 
-
-  if (argc != 3) {
-    std::cout << "USAGE\n" << "gra [RULE NUMBER] [ITERATIONS]\n\n";
-    std::cout << "EXAMPLE\n" << "gra 2236 30\n";
-    return -1;
-  }
-
-  unsigned int RULE_NUMBER = std::stoi(argv[1]);
-  size_t ITERATIONS = std::stoi(argv[2]);
-  
-  if (RULE_NUMBER >= 65536) {
-    std::cerr << "Rule number must be between [0-65536)\n";
-    return -1;
-  }
-  
-  rule_init(R, Config::d, RULE_NUMBER);
-  
-  std::filesystem::create_directories(std::format("./rule-{:05}", RULE_NUMBER)); 
-  graphviz_dump(A, S, std::format("rule-{:05}/{:04}.dot", RULE_NUMBER, 0));
-  
-  for (size_t t = 1; t <= ITERATIONS; ++t) {
-    C = S.mult(Config::d+1) + A.mult(S);
+  for (size_t t = 1; t <= iterations; ++t) {
+    C = S.mult(d+1) + A.mult(S);
     update_state(S, C, R); 
     update_division(D, C, R);
-    handle_division(A, S, D, Config::d);
-    graphviz_dump(A, S, std::format("rule-{:05}/{:04}.dot", RULE_NUMBER, t));
+    handle_division(A, S, D, d);
+    graphviz_dump(A, S, std::format("{}/rule-{:08}/{:04}.dot", outputDir, ruleNumber, t));
   }
 
   return 0;
