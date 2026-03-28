@@ -86,8 +86,20 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  if (dInitialized && initialGraphPath != "") { 
+    std::println("[INFO] Degree parameter will be overrided by loaded graph\n");
+  }
+
   Rule rule{d, ruleNumber};
   std::filesystem::create_directories(outputDir);
+
+  Graph g;
+
+  if (initialGraphPath == "") {
+    g = Graph{d, true /*save to file*/, outputDir}; // search for minimal regular graph
+  } else {
+    g = Graph{initialGraphPath};
+  }
 
   return 0;
 }
