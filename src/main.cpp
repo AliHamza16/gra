@@ -1,9 +1,11 @@
 #include <print>
-#include <filesystem>
 #include <cmath>
 #include <utility>
-#include "constants.h" 
-#include "gra.h" 
+#include <format>
+#include "constants.h"
+#include "gra.h"
+
+namespace fs = std::filesystem;
 
 static void printUsage(std::string_view path) {
   std::print(
@@ -25,8 +27,8 @@ int main(int argc, char* argv[]) {
   std::pair<int, bool> ruleNumber{0, false};
   std::pair<int, bool> iterations{0, false};
   std::pair<size_t, bool> d{0, false};
-  std::pair<std::string, bool> outputDir{Config::OUTPUT_DIR, false};
-  std::pair<std::string, bool> initialGraphPath{"", false};
+  std::pair<fs::path, bool> outputDir{fs::path{Config::OUTPUT_DIR}, false};
+  std::pair<fs::path, bool> initialGraphPath{fs::path{}, false};
 
   if (argc == 1) {
     printUsage(argv[0]);
@@ -48,10 +50,10 @@ int main(int argc, char* argv[]) {
         d.first = std::stoi(argv[++i]);
         d.second = true;
     } else if ((arg == "--initial" || arg == "-g") && i+1 < argc) {
-        initialGraphPath.first = argv[++i];
+        initialGraphPath.first = fs::path{argv[++i]};
         initialGraphPath.second = true; 
     } else if ((arg == "--output" || arg == "-o") && i+1 < argc) {
-        outputDir.first = argv[++i];
+        outputDir.first = fs::path{argv[++i]};
         outputDir.second = true;
     } else {
       std::println("Unknown argument: {}", arg);
@@ -71,8 +73,7 @@ int main(int argc, char* argv[]) {
     std::println("You must set the rule number\n");
     printUsage(argv[0]);
     return 1;
-  }
-  
+  } 
   
   if (!iterations.second) {
     std::println("You must set the iterations\n");
@@ -84,15 +85,17 @@ int main(int argc, char* argv[]) {
     std::println("[INFO] Degree parameter will be overrided by loaded graph");
   }
 
-  std::println("[INFO] Output files will be saved to the {}/", outputDir.first);
+  std::println("[INFO] Output files will be saved to the {}/", outputDir.first.string());
 
   Rule rule{d.first, ruleNumber.first};
-  std::filesystem::create_directories(outputDir.first);
+  fs::create_directories(outputDir.first);
 
   Graph g;
 
   if (!initialGraphPath.second) {
-    g = Graph{d.first, true /*save to file*/, outputDir.first}; // search for minimal regular graph
+    g = Graph{d.first}; // search for minimal graph
+    fs::path filepath = outputDir.first / std::format("minimal{}.graph", g.d);
+    saveGraphToFile(g, filepath);
   } else {
     g = Graph{initialGraphPath.first};
   }

@@ -1,12 +1,12 @@
 #include "gra.h"
-#include <filesystem>
 #include <format>
 #include <fstream>
 #include <print>
 #include <stdexcept>
 
-static void saveGraphToFile(const Graph& graph, const std::filesystem::path& path);
-static Graph loadGraphFromFile(std::string_view path);
+namespace fs = std::filesystem;
+
+static Graph loadGraphFromFile(const fs::path& path);
 static Graph findMinimalGraph(size_t d);
 
 Rule::Rule (size_t d, int rule) : d(d) {
@@ -22,24 +22,15 @@ Rule::Rule (size_t d, int rule) : d(d) {
     division[i] = (rule >> offset) & 1;
 }
 
-Graph::Graph(std::string_view path) {
+Graph::Graph(const fs::path& path) {
   *this = loadGraphFromFile(path);
 }
 
-Graph::Graph(size_t d, bool save, std::string_view outputDir) : d(d) {
-  Graph minimalGraph = findMinimalGraph(d);
-  state = minimalGraph.state;
-  
-  if (save) {
-    std::filesystem::path path{outputDir};
-    path /= std::format("minimal{}.graph", d);
-    if (!std::filesystem::is_regular_file(path)) {
-      saveGraphToFile(minimalGraph, path);
-    }
-  }
+Graph::Graph(size_t d) {
+  *this = findMinimalGraph(d);
 }
 
-static void saveGraphToFile(const Graph& graph, const std::filesystem::path& path) {
+void saveGraphToFile(const Graph& graph, const fs::path& path) {
   std::println("Saving graph to file: {}", path.string());
   std::ofstream file{path};
   
@@ -56,12 +47,12 @@ static void saveGraphToFile(const Graph& graph, const std::filesystem::path& pat
   }
 }
 
-static Graph loadGraphFromFile(std::string_view path) {
-  std::println("Loading graph from file: {}", path); 
-  std::ifstream file{path.data()};
+static Graph loadGraphFromFile(const fs::path& path) {
+  std::println("Loading graph from file: {}", path.string()); 
+  std::ifstream file{path};
   
   if (!file) {
-    std::println("An error occured during opening the file: {}", path);  
+    std::println("An error occured during opening the file: {}", path.string());  
     throw std::runtime_error("Error when opening file");
   } else {
     Graph g;

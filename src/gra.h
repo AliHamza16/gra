@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include <filesystem>
 #include "constants.h"
 
 struct Rule {
@@ -17,6 +18,8 @@ struct Graph {
   std::vector<uint8_t> state;
 
   Graph() = default;
-  Graph(std::string_view path);
-  Graph(size_t d, bool save = false, std::string_view outputDir = Config::OUTPUT_DIR);
+  Graph(const std::filesystem::path& path);
+  Graph(size_t d);
 };
+
+void saveGraphToFile(const Graph& graph, const std::filesystem::path& path);
