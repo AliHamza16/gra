@@ -1,6 +1,7 @@
 #include <print>
 #include <filesystem>
 #include <cmath>
+#include <utility>
 #include "constants.h" 
 #include "gra.h" 
 
@@ -21,16 +22,11 @@ static void printUsage(std::string_view path) {
 
 int main(int argc, char* argv[]) {
 
-  int ruleNumber;
-  int iterations;
-  size_t d;
-
-  bool ruleNumberInitialized = false;
-  bool iterationsInitialized = false;
-  bool dInitialized = false;
-
-  std::string outputDir{Config::OUTPUT_DIR};
-  std::string initialGraphPath = "";
+  std::pair<int, bool> ruleNumber{0, false};
+  std::pair<int, bool> iterations{0, false};
+  std::pair<size_t, bool> d{0, false};
+  std::pair<std::string, bool> outputDir{Config::OUTPUT_DIR, false};
+  std::pair<std::string, bool> initialGraphPath{"", false};
 
   if (argc == 1) {
     printUsage(argv[0]);
@@ -43,18 +39,20 @@ int main(int argc, char* argv[]) {
       printUsage(argv[0]);
       return 0;
     } else if ((arg == "--rule" || arg == "-r") && i+1 < argc) {
-        ruleNumber = std::stoi(argv[++i]);
-        ruleNumberInitialized = true;
+        ruleNumber.first = std::stoi(argv[++i]);
+        ruleNumber.second = true;
     } else if ((arg == "--iterations" || arg == "-i") && i+1 < argc) {
-        iterations = std::stoi(argv[++i]);
-        iterationsInitialized = true;
+        iterations.first = std::stoi(argv[++i]);
+        iterations.second = true;
     } else if ((arg == "--degree" || arg == "-d") && i+1 < argc) {
-        d = std::stoi(argv[++i]);
-        dInitialized = true;
+        d.first = std::stoi(argv[++i]);
+        d.second = true;
     } else if ((arg == "--initial" || arg == "-g") && i+1 < argc) {
-        initialGraphPath = argv[++i];
+        initialGraphPath.first = argv[++i];
+        initialGraphPath.second = true; 
     } else if ((arg == "--output" || arg == "-o") && i+1 < argc) {
-        outputDir = argv[++i];
+        outputDir.first = argv[++i];
+        outputDir.second = true;
     } else {
       std::println("Unknown argument: {}", arg);
       std::print("\n");
@@ -63,42 +61,45 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  if (initialGraphPath == "" && !dInitialized) {
+  if (!initialGraphPath.second && !d.second) {
     std::println("You must set the degree if no initial graph path provided\n");
     printUsage(argv[0]);
     return 1;
   }
 
-  if (!ruleNumberInitialized) {
+  if (!ruleNumber.second) {
     std::println("You must set the rule number\n");
     printUsage(argv[0]);
     return 1;
   }
   
-  if (ruleNumber < 0 || ruleNumber >= std::pow(16, d+1)) {
-    std::println("Rule number must be between [0, {})\n", std::pow(16, d+1));
-    return 1;
-  }
   
-  if (!iterationsInitialized) {
+  if (!iterations.second) {
     std::println("You must set the iterations\n");
     printUsage(argv[0]);
     return 1;
   }
 
-  if (dInitialized && initialGraphPath != "") { 
-    std::println("[INFO] Degree parameter will be overrided by loaded graph\n");
+  if (d.second && initialGraphPath.second) { 
+    std::println("[INFO] Degree parameter will be overrided by loaded graph");
   }
 
-  Rule rule{d, ruleNumber};
-  std::filesystem::create_directories(outputDir);
+  std::println("[INFO] Output files will be saved to the {}/", outputDir.first);
+
+  Rule rule{d.first, ruleNumber.first};
+  std::filesystem::create_directories(outputDir.first);
 
   Graph g;
 
-  if (initialGraphPath == "") {
-    g = Graph{d, true /*save to file*/, outputDir}; // search for minimal regular graph
+  if (!initialGraphPath.second) {
+    g = Graph{d.first, true /*save to file*/, outputDir.first}; // search for minimal regular graph
   } else {
-    g = Graph{initialGraphPath};
+    g = Graph{initialGraphPath.first};
+  }
+  
+  if (ruleNumber.first < 0 || ruleNumber.first >= std::pow(16, g.d+1)) {
+    std::println("Rule number must be between [0, {})\n", std::pow(16, g.d+1));
+    return 1;
   }
 
   return 0;
