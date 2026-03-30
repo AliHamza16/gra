@@ -75,3 +75,44 @@ static Graph findMinimalGraph(size_t d) {
   Graph g;
   return g; 
 }
+
+void evolveGraph(Graph& graph, const Rule& rule) {
+  size_t n = graph.state.size();
+  size_t d = graph.d;
+  size_t initialSize = n;
+
+  // There are 2(d+1) possible local configurations. I dont see any issue with
+  // assuming this value is less than 256. So we can use uint8_t for configurations.
+  // In that case, d must be less than 127, and this is a reasonable limit in practice.
+  std::vector<uint8_t> config{graph.state};
+  std::vector<uint8_t> division(n);
+
+  for (uint8_t& c: config) c *= d+1;
+  for (size_t i = 0; i < d*n; ++i) config[i/d] += graph.state[graph.edges[i]];
+
+  for (size_t i = 0; i < n; ++i) graph.state[i] = rule.state[config[i]]; // Update state
+  for (size_t i = 0; i < n; ++i) division[i] = rule.division[config[i]]; // Update division
+
+  for (size_t i = 0; i < initialSize; ++i) {
+    if (division[i]) {
+      // IDs of new nodes are i, n, n+1, ..., n+d-2.
+      for (size_t j = 1; j < d; ++j) graph.state.push_back(graph.state[i]); // Grow state
+      for (size_t j = 1; j < d; ++j) division.push_back(0); // Grow division
+
+      // Connect node n+j-1 with jth connection of old node i, and connect it to
+      // nodes i, n, n+1, n+2, ..., n+d-2 except itself.
+      for (size_t j = 1; j < d; ++j) {
+        for (size_t k = 0; k < d; ++k) { 
+          if (k == 0) graph.edges.push_back(i);
+          else if (k == j) graph.edges.push_back(graph.edges[i*d + j]);
+          else graph.edges.push_back(n-1 + k);
+        }
+      }
+      // Keep the first connection old node i, and connect it to
+      // nodes n, n+1, ..., n+d-2.
+      for (size_t j = 1; j < d; ++j) graph.edges[i*d + j] = n-1 + j;
+
+      n += d-1;
+    }
+  }
+}

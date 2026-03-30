@@ -100,10 +100,19 @@ int main(int argc, char* argv[]) {
     g = Graph{initialGraphPath.first};
   }
   
+  if (g.d >= 127) {
+    std::println("Degree is too large to compute. Use a degree less than 127.");
+    return 1; 
+  } 
+  
   if (ruleNumber.first < 0 || ruleNumber.first >= std::pow(16, g.d+1)) {
-    std::println("Rule number must be between [0, {})\n", std::pow(16, g.d+1));
+    std::println("Rule number must be between [0, {})", std::pow(16, g.d+1));
     return 1;
   }
+
+  evolveGraph(g, rule);
+  fs::path filepath = outputDir.first / "test.graph";
+  saveGraphToFile(g, filepath);
 
   return 0;
 }

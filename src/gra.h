@@ -23,3 +23,4 @@ struct Graph {
 };
 
 void saveGraphToFile(const Graph& graph, const std::filesystem::path& path);
+void evolveGraph(Graph& graph, const Rule& rule);
