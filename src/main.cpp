@@ -15,7 +15,7 @@ static void printUsage(std::string_view path) {
     "  -i, --iterations <N> Number of iterations to evolve the graph         (Required)\n"
     "  -d, --degree <N>     Degree of the regular graph (d-regular)          (Required if no initial graph)\n"
     "  -g, --initial <file> Path to the initial graph file                   (Optional)\n"
-    "  -o, --output <dir>   Output directory for generated .dot files        (default: data)\n"
+    "  -o, --output <dir>   Output directory for generated graph files       (default: data)\n"
     "  -h, --help           Show this help message\n\n"
     "Example:\n"
     "  {} -r 2236 -i 30 -d 3 -o data\n\n",
@@ -85,10 +85,8 @@ int main(int argc, char* argv[]) {
     std::println("[INFO] Degree parameter will be overrided by loaded graph");
   }
 
-  std::println("[INFO] Output files will be saved to the {}/", outputDir.first.string());
-
-  Rule rule{d.first, ruleNumber.first};
   fs::create_directories(outputDir.first);
+  std::println("[INFO] Output files will be saved to the {}/", outputDir.first.string());
 
   Graph g;
 
@@ -99,7 +97,7 @@ int main(int argc, char* argv[]) {
   } else {
     g = Graph{initialGraphPath.first};
   }
-  
+
   if (g.d > 127) {
     std::println("Degree is too large to compute. Maximum degree is 127.");
     return 1; 
@@ -109,10 +107,17 @@ int main(int argc, char* argv[]) {
     std::println("Rule number must be between [0, {})", std::pow(16, g.d+1));
     return 1;
   }
+  
+  Rule rule{g.d, ruleNumber.first};
 
-  evolveGraph(g, rule);
-  fs::path filepath = outputDir.first / "test.graph";
-  saveGraphToFile(g, filepath);
+  fs::path filepath = outputDir.first / std::format("R{:08}", ruleNumber.first);
+  fs::create_directories(filepath);
+
+  saveGraphToFile(g, filepath / std::format("{:06}.graph", 0));
+  for (size_t i = 1; i <= iterations.first; ++i) {
+    evolveGraph(g, rule);
+    saveGraphToFile(g, filepath / std::format("{:06}.graph", i)); 
+  }
 
   return 0;
 }

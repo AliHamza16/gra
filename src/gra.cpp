@@ -64,7 +64,7 @@ static Graph loadGraphFromFile(const fs::path& path) {
 
     for (int& e: g.edges) file >> e;
     for (uint8_t& s: g.state) { int val; file >> val; s = (uint8_t)val; }
-
+    
     return g;
   }
 }
@@ -99,19 +99,41 @@ void evolveGraph(Graph& graph, const Rule& rule) {
       for (size_t j = 1; j < d; ++j) graph.state.push_back(graph.state[i]); // Grow state
       for (size_t j = 1; j < d; ++j) division.push_back(0); // Grow division
 
-      // Connect node n+j-1 with jth connection of old node i, and connect it to
-      // nodes i, n, n+1, n+2, ..., n+d-2 except itself.
+      graph.edges.resize((n+d-1)*d);
+      
+      // Update the connections of the nodes that we were previously connected to
       for (size_t j = 1; j < d; ++j) {
-        for (size_t k = 0; k < d; ++k) { 
-          if (k == 0) graph.edges.push_back(i);
-          else if (k == j) graph.edges.push_back(graph.edges[i*d + j]);
-          else graph.edges.push_back(n-1 + k);
+        int c = graph.edges[i*d + j];
+        for (size_t k = 0; k < d; ++k) {
+          if (graph.edges[c*d + k] == i) {
+            graph.edges[c*d + k] = (n+j-1);
+            graph.edges[(n+j-1)*d + 1] = c;
+          }
         }
       }
-      // Keep the first connection old node i, and connect it to
-      // nodes n, n+1, ..., n+d-2.
-      for (size_t j = 1; j < d; ++j) graph.edges[i*d + j] = n-1 + j;
 
+      // Connect nodes n, n+1, ..., n+d-2 to node i
+      for (size_t j = 1; j < d; ++j) {
+        graph.edges[(n+j-1)*d + 0] = i;
+      }
+
+      // (n+j-1) goes from n to n+d-2
+      // (n+j-1)*d + k goes from (n+j-1)*d + 2 to (n+j-1)*d + d-1
+      // m = (k-2) or (k-2)+1
+      // for n=0, m= _, 1, 2, ..., d-2
+      // for n=1, m= 0, _, 2, ..., d-2
+      // for n=2, m= 0, 1, _, ..., d-2
+      for (size_t j = 1; j < d; ++j) {
+        for (size_t k = 2; k < d; ++k) {
+          graph.edges[(n+j-1)*d + k] = (k-2) < (j-1) ? (n + (k-2)) : (n + ((k-2)+1));
+        }
+      }
+
+      // connect node i to nodes n, n+1, ..., n+d-2
+      for (size_t j = 1; j < d; ++j) {
+        graph.edges[i*d + j] = (n+j-1);
+      }
+      
       n += d-1;
     }
   }
