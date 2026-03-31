@@ -100,8 +100,8 @@ int main(int argc, char* argv[]) {
     g = Graph{initialGraphPath.first};
   }
   
-  if (g.d >= 127) {
-    std::println("Degree is too large to compute. Use a degree less than 127.");
+  if (g.d > 127) {
+    std::println("Degree is too large to compute. Maximum degree is 127.");
     return 1; 
   } 
   

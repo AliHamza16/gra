@@ -82,8 +82,8 @@ void evolveGraph(Graph& graph, const Rule& rule) {
   size_t initialSize = n;
 
   // There are 2(d+1) possible local configurations. I dont see any issue with
-  // assuming this value is less than 256. So we can use uint8_t for configurations.
-  // In that case, d must be less than 127, and this is a reasonable limit in practice.
+  // assuming this value is no greater than 256. So we can use uint8_t for configurations.
+  // In that case, d must be less than or equal 127, and this is a reasonable limit in practice.
   std::vector<uint8_t> config{graph.state};
   std::vector<uint8_t> division(n);
 
