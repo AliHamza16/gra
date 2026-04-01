@@ -34,8 +34,15 @@ gra -h
 
 ### Example
 ```bash
-./build/gra --rule 2236 --degree 3 --iterations 70
+./build/gra --initial data/minimal3-1.graph -r 2238 -i 120 --export
 ```
+
+## Visualization
+| Rule 2238 - Iteration 120 |
+| :---: |
+| ![Graph Visualization](docs/assets/gra.png) |
+| Layout generated using Gephi's ForceAtlas2 algorithm and rendered via SFML from JSON export. |
+
 
 
 ## References
