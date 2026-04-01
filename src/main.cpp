@@ -25,8 +25,6 @@ static void printUsage(std::string_view path) {
 }
 
 int main(int argc, char* argv[]) {
-  using namespace std::chrono;
-
   std::pair<int, bool> ruleNumber{0, false};
   std::pair<int, bool> iterations{0, false};
   std::pair<size_t, bool> d{0, false};
@@ -119,13 +117,13 @@ int main(int argc, char* argv[]) {
   fs::path filepath = outputDir.first / std::format("R{:08}", ruleNumber.first);
   fs::create_directories(filepath);
 
-  auto startTime = high_resolution_clock::now();
+  auto startTime = std::chrono::high_resolution_clock::now();
   for (size_t i = 0; i <= iterations.first; ++i) {
     //saveGraphToFile(g, filepath / std::format("{:06}.graph", i)); 
     evolveGraph(g, rule);
   }
-  auto endTime = high_resolution_clock::now();
-  duration<double, std::milli> timeElapsed = endTime - startTime;
+  auto endTime = std::chrono::high_resolution_clock::now();
+  const std::chrono::duration<double, std::milli> timeElapsed = (endTime - startTime);
   
   saveGraphToFile(g, filepath / std::format("{:06}.graph", iterations.first));
   
@@ -133,7 +131,7 @@ int main(int argc, char* argv[]) {
     exportToGraphviz(g, filepath / std::format("{:06}.dot", iterations.first));
   }
 
-  std::cout << std::format("Graph evolution completed. Time elapsed: {:.2f}s\n", timeElapsed.count() / 1000.0);
+  std::cout << std::format("Graph evolution completed. Time elapsed: {:.2f}s\n", timeElapsed.count()/1000.0);
 
   return 0;
 }
