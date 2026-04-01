@@ -85,22 +85,31 @@ void evolveGraph(Graph& graph, const Rule& rule) {
   // assuming this value is no greater than 256. So we can use uint8_t for configurations.
   // In that case, d must be less than or equal 127, and this is a reasonable limit in practice.
   std::vector<uint8_t> config{graph.state};
+  for (uint8_t& c: config) c *= d+1;
+  
+  #pragma omp parallel for
+  for (size_t i = 0; i < n; ++i) {
+    for (size_t j = 0; j < d; ++j) {
+      config[i] += graph.state[graph.edges[i*d+j]];
+    }
+  } 
+  
   std::vector<uint8_t> division(n);
 
-  for (uint8_t& c: config) c *= d+1;
-  for (size_t i = 0; i < d*n; ++i) config[i/d] += graph.state[graph.edges[i]];
-
-  for (size_t i = 0; i < n; ++i) graph.state[i] = rule.state[config[i]]; // Update state
-  for (size_t i = 0; i < n; ++i) division[i] = rule.division[config[i]]; // Update division
-
+  #pragma omp parallel for
+  for (size_t i = 0; i < n; ++i) graph.state[i] = rule.state[config[i]]; 
+  
+  #pragma omp parallel for
+  for (size_t i = 0; i < n; ++i) division[i] = rule.division[config[i]];
+  
   for (size_t i = 0; i < initialSize; ++i) {
     if (division[i]) {
       // IDs of new nodes are i, n, n+1, ..., n+d-2.
       for (size_t j = 1; j < d; ++j) graph.state.push_back(graph.state[i]); // Grow state
       for (size_t j = 1; j < d; ++j) division.push_back(0); // Grow division
 
-      graph.edges.resize((n+d-1)*d);
-      
+      graph.edges.resize((n+(d-1))*d);
+    
       // Update the connections of the nodes that we were previously connected to
       for (size_t j = 1; j < d; ++j) {
         int c = graph.edges[i*d + j];

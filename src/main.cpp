@@ -2,6 +2,7 @@
 #include <utility>
 #include <format>
 #include <iostream>
+#include <chrono>
 #include "constants.h"
 #include "gra.h"
 
@@ -23,6 +24,7 @@ static void printUsage(std::string_view path) {
 }
 
 int main(int argc, char* argv[]) {
+  using namespace std::chrono;
 
   std::pair<int, bool> ruleNumber{0, false};
   std::pair<int, bool> iterations{0, false};
@@ -37,7 +39,7 @@ int main(int argc, char* argv[]) {
 
   for (int i = 1; i < argc; ++i) {
     std::string_view arg{argv[i]};
-    if (arg == "--help") {
+    if (arg == "--help" || arg == "-h") {
       printUsage(argv[0]);
       return 0;
     } else if ((arg == "--rule" || arg == "-r") && i+1 < argc) {
@@ -113,11 +115,15 @@ int main(int argc, char* argv[]) {
   fs::path filepath = outputDir.first / std::format("R{:08}", ruleNumber.first);
   fs::create_directories(filepath);
 
-  saveGraphToFile(g, filepath / std::format("{:06}.graph", 0));
-  for (size_t i = 1; i <= iterations.first; ++i) {
+  auto startTime = high_resolution_clock::now();
+  for (size_t i = 0; i <= iterations.first; ++i) {
+    //saveGraphToFile(g, filepath / std::format("{:06}.graph", i)); 
     evolveGraph(g, rule);
-    saveGraphToFile(g, filepath / std::format("{:06}.graph", i)); 
   }
+  auto endTime = high_resolution_clock::now();
+  duration<double, std::milli> timeElapsed = endTime - startTime;
+  saveGraphToFile(g, filepath / std::format("{:06}.graph", iterations.first));
+  std::cout << std::format("Graph evolution completed. Time elapsed: {:.2f}s\n", timeElapsed.count() / 1000.0);
 
   return 0;
 }
