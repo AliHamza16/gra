@@ -22,6 +22,7 @@ gra [Options]
 | -d   | --degree <N\>     | Degree of the regular graph (d-regular). Maximum 127.   | Required (if no initial graph) |
 | -g   | --initial <file\> | Path to the initial .graph file to load the state from. | Optional                       |
 | -o   | --output <dir\>   | Output directory for generated graph files.             | Optional (Default: data)       |
+|      | --export          | Export final graph to graphviz dot file                 | Optional                       |
 
 More information about rules is available [here](https://paulcousin.net/graph-rewriting-automata/rules.html#rules).
 
