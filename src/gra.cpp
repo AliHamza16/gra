@@ -147,3 +147,32 @@ void evolveGraph(Graph& graph, const Rule& rule) {
     }
   }
 }
+
+void exportToGraphviz(const Graph& graph, const std::filesystem::path& path) {
+  std::cout << std::format("Exporting graph to graphviz: {}\n", path.string());
+  std::ofstream file{path};
+  
+  if (!file) {
+    std::cout << std::format("An error occured during opening the file: {}\n", path.string());
+  } else {
+
+    size_t n = graph.state.size();
+    size_t d = graph.d;
+
+    file << "graph G {\n";
+
+    //file << "  node [style=filled];\n";
+    
+    for (size_t i = 0; i < n; ++i) {
+      file << std::format("  {} [state={}];\n", i, graph.state[i]);
+    }
+
+    for (size_t i = 0; i < n; ++i) {
+      for (size_t j = 0; j < d; ++j) {
+        file << std::format("  {} -- {};\n", i, graph.edges[i*d + j]);
+      }    
+    }
+
+    file << "}\n";
+  }
+}

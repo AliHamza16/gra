@@ -17,6 +17,7 @@ static void printUsage(std::string_view path) {
     "  -d, --degree <N>     Degree of the regular graph (d-regular)          (Required if no initial graph)\n"
     "  -g, --initial <file> Path to the initial graph file                   (Optional)\n"
     "  -o, --output <dir>   Output directory for generated graph files       (default: data)\n"
+    "  --export             Export final graph to graphviz dot file          (Optional)\n"
     "  -h, --help           Show this help message\n\n"
     "Example:\n"
     "  {} -r 2236 -i 30 -d 3 -o data\n\n",
@@ -31,6 +32,7 @@ int main(int argc, char* argv[]) {
   std::pair<size_t, bool> d{0, false};
   std::pair<fs::path, bool> outputDir{fs::path{Config::OUTPUT_DIR}, false};
   std::pair<fs::path, bool> initialGraphPath{fs::path{}, false};
+  bool exportGraph = false;
 
   if (argc == 1) {
     printUsage(argv[0]);
@@ -57,6 +59,8 @@ int main(int argc, char* argv[]) {
     } else if ((arg == "--output" || arg == "-o") && i+1 < argc) {
         outputDir.first = fs::path{argv[++i]};
         outputDir.second = true;
+    } else if (arg == "--export") {
+        exportGraph = true;
     } else {
       std::cout << std::format("Unknown or incomplete argument: {}\n", arg);
       std::cout << std::endl;
@@ -122,7 +126,13 @@ int main(int argc, char* argv[]) {
   }
   auto endTime = high_resolution_clock::now();
   duration<double, std::milli> timeElapsed = endTime - startTime;
+  
   saveGraphToFile(g, filepath / std::format("{:06}.graph", iterations.first));
+  
+  if (exportGraph) {
+    exportToGraphviz(g, filepath / std::format("{:06}.dot", iterations.first));
+  }
+
   std::cout << std::format("Graph evolution completed. Time elapsed: {:.2f}s\n", timeElapsed.count() / 1000.0);
 
   return 0;
