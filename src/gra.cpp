@@ -71,7 +71,7 @@ static Graph loadGraphFromFile(const fs::path& path) {
 
 static Graph findMinimalGraph(size_t d) {
   // TODO: implement search algorithm for minimal graphs
-  throw new std::runtime_error("Not implemented");
+  throw std::runtime_error("Minimal graph search is not implemented yet");
   Graph g;
   return g; 
 }
