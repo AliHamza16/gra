@@ -1,7 +1,7 @@
 #include "gra.h"
 #include <format>
 #include <fstream>
-#include <print>
+#include <iostream>
 #include <stdexcept>
 
 namespace fs = std::filesystem;
@@ -31,11 +31,11 @@ Graph::Graph(size_t d) {
 }
 
 void saveGraphToFile(const Graph& graph, const fs::path& path) {
-  std::println("Saving graph to file: {}", path.string());
+  std::cout << std::format("Saving graph to file: {}\n", path.string());
   std::ofstream file{path};
   
   if (!file) {
-    std::println("An error occured during opening the file: {}", path.string()); 
+    std::cout << std::format("An error occured during opening the file: {}\n", path.string());
   } else {
     file << graph.d << " " << graph.state.size() << "\n";
 
@@ -48,11 +48,11 @@ void saveGraphToFile(const Graph& graph, const fs::path& path) {
 }
 
 static Graph loadGraphFromFile(const fs::path& path) {
-  std::println("Loading graph from file: {}", path.string()); 
+  std::cout << std::format("Loading graph from file: {}\n", path.string());
   std::ifstream file{path};
   
   if (!file) {
-    std::println("An error occured during opening the file: {}", path.string());  
+    std::cout << std::format("An error occured during opening the file: {}\n", path.string());
     throw std::runtime_error("Error when opening file");
   } else {
     Graph g;

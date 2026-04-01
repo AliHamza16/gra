@@ -1,38 +1,42 @@
 # Graph-Rewriting Automata
 This repository contains the unofficial C++ implementation of [GRA](https://paulcousin.net/graph-rewriting-automata/index.html)
 
-## Compiling 
-```
-g++ -std=c++23 -o gra src/main.cpp
+
+## Building 
+```bash
+cmake -B build
+cmake --build build
 ```
 
 ## Usage
-```
-./gra [RULE NUMBER] [ITERATIONS]
+```bash
+gra [Options]
 ```
 
-**RULE NUMBER** is an integer between [0-65536) that its binary form displays the behavior of the rule.
-**ITERATIONS** determine how many times the graph will be evolved according to the rule.
+### Options
+
+| Flag | Long Flag        | Description                                             | Requirement                    |
+|------|------------------|---------------------------------------------------------|--------------------------------|
+| -r   | --rule <N\>       | Rule number. Must be in the range $[0,16^{d+1})$.      | Required                       |
+| -i   | --iterations <N\> | Number of iterations to evolve the graph.               | Required                       |
+| -d   | --degree <N\>     | Degree of the regular graph (d-regular). Maximum 127.   | Required (if no initial graph) |
+| -g   | --initial <file\> | Path to the initial .graph file to load the state from. | Optional                       |
+| -o   | --output <dir\>   | Output directory for generated graph files.             | Optional (Default: data)       |
 
 More information about rules is available [here](https://paulcousin.net/graph-rewriting-automata/rules.html#rules).
-Initial graph is a [minimal regular graph](https://paulcousin.net/graph-rewriting-automata/rules.html#minimal-graphs).
 
+If no initial graph is given, gra searchs for [minimal](https://paulcousin.net/graph-rewriting-automata/rules.html#minimal-graphs) d-regular graph.
+
+### Help
+```bash
+gra -h
+```
 
 ### Example
-```
-./gra 2236 30
-```
-
-### Visualization
-__gra__ generates graph files in graphviz dot format for each step.
-These graphs can be visualized using any layouting engine comes with graphviz.
-
-```
-neato -Tpng -O rule-2236/*.dot
-feh -B white rule-2236/*.png
+```bash
+./build/gra --rule 2236 --degree 3 --iterations 70
 ```
 
-This command creates PNG files for each graph using neato and opens them in feh.
 
 ## References
 - Cousin, P., & Maignan, A. (2022). Organic Structures Emerging from Bio-Inspired Graph-Rewriting Automata. 2022 24th International Symposium on Symbolic and Numeric Algorithms for Scientific Computing (SYNASC), 293–296. https://doi.org/10.1109/synasc57785.2022.00053

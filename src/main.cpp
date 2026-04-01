@@ -1,14 +1,14 @@
-#include <print>
 #include <cmath>
 #include <utility>
 #include <format>
+#include <iostream>
 #include "constants.h"
 #include "gra.h"
 
 namespace fs = std::filesystem;
 
 static void printUsage(std::string_view path) {
-  std::print(
+  std::cout << std::format(
     "Usage: {} [options]\n\n"
     "Options:\n"
     "  -r, --rule <N>       Rule number [ 0, 16^(d+1) )                      (Required)\n"
@@ -56,37 +56,37 @@ int main(int argc, char* argv[]) {
         outputDir.first = fs::path{argv[++i]};
         outputDir.second = true;
     } else {
-      std::println("Unknown argument: {}", arg);
-      std::print("\n");
+      std::cout << std::format("Unknown or incomplete argument: {}\n", arg);
+      std::cout << std::endl;
       printUsage(argv[0]);
       return 1;
     }
   }
 
   if (!initialGraphPath.second && !d.second) {
-    std::println("You must set the degree if no initial graph path provided\n");
+    std::cout << std::format("You must set the degree if no initial graph path provided\n");
     printUsage(argv[0]);
     return 1;
   }
 
   if (!ruleNumber.second) {
-    std::println("You must set the rule number\n");
+    std::cout << std::format("You must set the rule number\n");
     printUsage(argv[0]);
     return 1;
   } 
   
   if (!iterations.second) {
-    std::println("You must set the iterations\n");
+    std::cout << std::format("You must set the iterations\n");
     printUsage(argv[0]);
     return 1;
   }
 
   if (d.second && initialGraphPath.second) { 
-    std::println("[INFO] Degree parameter will be overrided by loaded graph");
+    std::cout << std::format("[INFO] Degree parameter will be overrided by loaded graph\n");
   }
 
   fs::create_directories(outputDir.first);
-  std::println("[INFO] Output files will be saved to the {}/", outputDir.first.string());
+  std::cout << std::format("[INFO] Output files will be saved to the {}/\n", outputDir.first.string());
 
   Graph g;
 
@@ -99,12 +99,12 @@ int main(int argc, char* argv[]) {
   }
 
   if (g.d > 127) {
-    std::println("Degree is too large to compute. Maximum degree is 127.");
+    std::cout << std::format("Degree is too large to compute. Maximum degree is 127.\n");
     return 1; 
   } 
   
   if (ruleNumber.first < 0 || ruleNumber.first >= std::pow(16, g.d+1)) {
-    std::println("Rule number must be between [0, {})", std::pow(16, g.d+1));
+    std::cout << std::format("Rule number must be between [0, {})\n", std::pow(16, g.d+1));
     return 1;
   }
   
