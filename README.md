@@ -41,7 +41,7 @@ gra -h
 ## Visualization
 | Rule 2238 - Iteration 120 |
 | :---: |
-| ![Graph Visualization](docs/assets/gra-2238.svg) |
+| ![Graph Visualization](docs/assets/gra.png) |
 | Layout generated using Gephi's ForceAtlas2 algorithm and rendered via SFML from JSON export. |
 
 
